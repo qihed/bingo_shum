@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ШУМные карточки</title>
+<style>
+body{margin:0;padding:24px;font-family:Arial,sans-serif;background:#0a0a0a;color:white}
+h1{font-size:42px;margin:0 0 12px}
+p{font-size:18px;color:#cfcfcf;line-height:1.45}
+.buttons{display:flex;gap:12px;margin:26px 0;flex-wrap:wrap}
+button{border:none;border-radius:999px;padding:15px 22px;font-size:17px;font-weight:700;cursor:pointer}
+.clear{background:#222;color:white}
+.download{background:#FF1493;color:white}
+.word{background:#86D2C5;color:#111}
+.pdf{background:white;color:#111}
+.cards{display:flex;flex-direction:column;gap:22px}
+.card{background:#111;border:1px solid #222;border-radius:26px;padding:18px}
+.card-title{border-radius:20px;padding:26px;font-size:26px;line-height:1.15;font-weight:800;margin-bottom:18px}
+.pink{background:#FF1493;color:white}.mint{background:#86D2C5;color:#111}
+label{display:block;margin-bottom:8px;font-size:14px;text-transform:uppercase;font-weight:800;color:#bdbdbd}
+textarea,input{width:100%;box-sizing:border-box;border:1px solid #333;border-radius:16px;padding:14px;font-size:16px;margin-bottom:16px;font-family:Arial,sans-serif;background:#0f0f0f;color:white}
+textarea{min-height:110px;resize:vertical}
+.small-note{font-size:14px;color:#aaa;margin-top:-10px}
+@media print{
+  body{background:white;color:#111;padding:0}
+  .buttons,.small-note,p{display:none}
+  h1{color:#111;margin:20px}
+  .card{break-inside:avoid;background:white;border:1px solid #ddd;margin:14px 20px}
+  textarea,input{display:none}
+  .print-note,.print-link{display:block!important;color:#111;margin:10px 0 0;font-size:15px;line-height:1.45}
+}
+.print-note,.print-link{display:none}
+</style>
+</head>
+<body>
+<h1>ШУМные карточки</h1>
+
+
+<div class="buttons">
+<button class="clear" onclick="clearAll()">Очистить</button>
+<button class="word" onclick="downloadWord()">Скачать Word</button>
+<button class="pdf" onclick="downloadPDF()">Скачать PDF</button>
+</div>
+
+<div class="small-note">PDF скачивается через системное окно печати: выберите «Сохранить в PDF».</div>
+
+<div class="cards" id="cards"></div>
+
+<script>
+const cards=[
+"Был (-а) на площадке в Донском",
+"Снимаю ролики",
+"Есть хобби, не связанное с медиа",
+"Работаю более 5 лет в медиа сфере",
+"Прихожу на площадку заранее, чтобы познакомиться с ней",
+"Веду календарь съемок",
+"Сначала задаю вопросы, потом делаю работу",
+"Легко снимаю тренды и разговорные видео в шумных местах",
+"Родом из другого региона",
+"Есть домашние животные",
+"Легко собираю людей вокруг задачи",
+"Умею создавать продукт с минимальными ресурсами",
+"Люблю работать, когда дедлайны горят",
+"Выступаю спикером по узкой тематике",
+"Работаю с государственным сектором",
+"Предпочитаю звонки, вместо переписок",
+"Люблю импровизировать",
+"Получал (-а) хейт в комментариях и не удалял (-а)",
+"Монтировал (-а) ролик за ночь до эфира",
+"Менял (-а) профессиональную сферу",
+"Работаю в кадре",
+"Работал (-а) со сложными участниками/заказчиками",
+"Модерирую пленарные площадки/групповую работу",
+"Люблю заранее понимать структуру встречи",
+"Люблю делать сразу, не откладывая на потом"
+];
+
+const colors=["pink","mint"];
+const container=document.getElementById("cards");
+
+container.innerHTML=cards.map((title,index)=>`
+<div class="card">
+<div class="card-title ${colors[index%colors.length]}">${title}</div>
+<label>Место для ваших ШУМных заметок</label>
+<textarea id="note-${index}" placeholder="Напишите заметку..." oninput="updatePrintFields(${index})"></textarea>
+<label>Ссылка</label>
+<input id="link-${index}" type="text" placeholder="Вставьте ссылку..." oninput="updatePrintFields(${index})">
+<div class="print-note" id="print-note-${index}"></div>
+<div class="print-link" id="print-link-${index}"></div>
+</div>`).join("");
+
+function esc(value){
+  return String(value || "").replace(/[&<>"']/g, function(m){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m];
+  });
+}
+
+function updatePrintFields(index){
+  const note=document.getElementById(`note-${index}`).value;
+  const link=document.getElementById(`link-${index}`).value;
+  document.getElementById(`print-note-${index}`).innerHTML="<b>ШУМные заметки:</b> "+esc(note || "не заполнено");
+  document.getElementById(`print-link-${index}`).innerHTML="<b>Ссылка:</b> "+esc(link || "не заполнено");
+}
+
+function getExportHtml(){
+  let blocks="";
+  cards.forEach((title,index)=>{
+    const note=document.getElementById(`note-${index}`).value || "не заполнено";
+    const link=document.getElementById(`link-${index}`).value || "не заполнено";
+    const bg=index%2===0 ? "#FF1493" : "#86D2C5";
+    const color=index%2===0 ? "#ffffff" : "#111111";
+
+    blocks += `
+      <div style="margin:0 0 18px 0; padding:14px; border:1px solid #dddddd; border-radius:18px; font-family:Arial, sans-serif;">
+        <div style="background:${bg}; color:${color}; padding:20px; border-radius:16px; font-size:22px; font-weight:800; line-height:1.2;">
+          ${esc(title)}
+        </div>
+        <div style="padding:14px 4px 4px 4px; font-size:15px; line-height:1.45;">
+          <p style="margin:0 0 8px 0;"><b>Место для ваших ШУМных заметок:</b><br>${esc(note).replace(/\n/g,"<br>")}</p>
+          <p style="margin:0;"><b>Ссылка:</b><br>${esc(link)}</p>
+        </div>
+      </div>`;
+  });
+
+  return `
+  <!DOCTYPE html>
+  <html lang="ru">
+  <head><meta charset="UTF-8"></head>
+  <body style="font-family:Arial, sans-serif; color:#111111;">
+    <h1 style="font-size:32px; margin:0 0 20px 0;">ШУМные карточки</h1>
+    ${blocks}
+  </body>
+  </html>`;
+}
+
+function downloadWord(){
+  const content=getExportHtml();
+  const blob=new Blob(["\ufeff", content], {type:"application/msword;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="shum-cards.doc";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadPDF(){
+  cards.forEach((_,index)=>updatePrintFields(index));
+  window.print();
+}
+
+function clearAll(){
+  cards.forEach((_,index)=>{
+    document.getElementById(`note-${index}`).value="";
+    document.getElementById(`link-${index}`).value="";
+    updatePrintFields(index);
+  });
+}
+
+cards.forEach((_,index)=>updatePrintFields(index));
+</script>
+</body>
+</html>
